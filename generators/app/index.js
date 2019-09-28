@@ -14,10 +14,28 @@ module.exports = class extends Generator {
 
     const prompts = [
       {
-        type: 'confirm',
-        name: 'someAnswer',
-        message: 'Would you like to enable this option?',
-        default: true,
+        type: 'input',
+        name: 'name',
+        message: 'Your project name',
+        default: this.appname,
+      },
+      {
+        type: 'input',
+        name: 'desc',
+        message: 'Description',
+        default: 'About this project',
+      },
+      {
+        type: 'input',
+        name: 'version',
+        message: 'Version',
+        default: '1.0.0',
+      },
+      {
+        type: 'input',
+        name: 'author',
+        message: 'Author',
+        default: 'Your name',
       },
     ];
 
@@ -28,13 +46,32 @@ module.exports = class extends Generator {
   }
 
   writing() {
-    this.fs.copy(
-      this.templatePath('dummyfile.txt'),
-      this.destinationPath('dummyfile.txt')
+    // Make the name dash-separated
+    let name = this.props.name
+      .toLocaleLowerCase()
+      .split(' ')
+      .join('-');
+
+    // Copy all non-dotfiles in common
+    this.fs.copy(this.templatePath('common/**/*'), this.destinationRoot());
+
+    // Copy all dotfiles in common
+    this.fs.copy(this.templatePath('common/.*'), this.destinationRoot());
+
+    // Copy package.json
+    this.fs.copyTpl(
+      this.templatePath('common/package.json'),
+      this.destinationPath('package.json'),
+      {
+        name: name,
+        desc: this.props.desc,
+        author: this.props.author,
+        version: this.props.version,
+      }
     );
   }
 
   install() {
-    this.installDependencies();
+    this.npmInstall();
   }
 };
